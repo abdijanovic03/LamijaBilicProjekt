@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text.Json;
-using System.Diagnostics.CodeAnalysis;
 
+// Klasa Student predstavlja jednog studenta i njegove ocjene
 class Student
 {
-    public required string Ime { get; set; }
-    public required string Prezime { get; set; }
-    public required string Indeks { get; set; }
-    public List<int> Ocjene { get; set; } = new List<int>();
+    public required string Ime { get; set; }      // Ime studenta
+    public required string Prezime { get; set; }  // Prezime studenta
+    public required string Indeks { get; set; }   // Broj indeksa
+    public List<int> Ocjene { get; set; } = new List<int>(); // Lista ocjena
 
+    // Metoda koja računa prosjek ocjena
     public double Prosjek()
     {
         return Ocjene.Count > 0 ? Ocjene.Average() : 0;
@@ -20,16 +21,20 @@ class Student
 
 class Program
 {
+    // Glavni kontejner svih studenata (ključ je indeks)
     static Dictionary<string, Student> studenti = new Dictionary<string, Student>();
+
+    // Putanja do JSON fajla za čuvanje podataka ./lokacija_koda/bin/Debug/netX.X/studenti.json
     static string fajl = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "studenti.json");
 
     static void Main()
     {
-        UcitajStudenteIzFajla();
-        bool radi = true;
+        UcitajStudenteIzFajla(); // Učitavanje postojećih podataka
 
+        bool radi = true;
         while (radi)
         {
+            // Glavni meni
             Console.WriteLine("\n=== Meni ===");
             Console.WriteLine("1. Unesi studenta");
             Console.WriteLine("2. Unesi ocjenu studentu");
@@ -63,7 +68,7 @@ class Program
                     PretraziStudenta();
                     break;
                 case "7":
-                    SpremiStudenteUFajl();
+                    SpremiStudenteUFajl(); // Spremanje na izlazu
                     radi = false;
                     break;
                 default:
@@ -73,6 +78,7 @@ class Program
         }
     }
 
+    // Dodavanje novog studenta
     static void UnesiStudenta()
     {
         Console.Write("Ime: ");
@@ -81,117 +87,123 @@ class Program
         Console.Write("Prezime: ");
         string prezime = Console.ReadLine()?.Trim();
 
-    Console.Write("Indeks: ");
-    string indeks = Console.ReadLine()?.Trim();
+        Console.Write("Indeks: ");
+        string indeks = Console.ReadLine()?.Trim();
 
-    if (indeks.Length > 0 && !studenti.ContainsKey(indeks) && ime.Length > 0 && prezime.Length > 0)
-    {
-        studenti[indeks] = new Student { Ime = ime, Prezime = prezime, Indeks = indeks };
-        Console.WriteLine("Student uspješno unesen.");
-    }
-    else
-    {
-        Console.WriteLine("Student sa tim indeksom već postoji.");
-    }
-}
-
-static void UnesiOcjenu()
-{
-    Console.Write("Unesi indeks studenta: ");
-    string indeks = Console.ReadLine();
-
-    if (studenti.ContainsKey(indeks))
-    {
-        Console.Write("Unesi ocjenu (6-10): ");
-        if (int.TryParse(Console.ReadLine(), out int ocjena) && ocjena >= 6 && ocjena <= 10)
+        if (indeks.Length > 0 && !studenti.ContainsKey(indeks) && ime.Length > 0 && prezime.Length > 0)
         {
-            studenti[indeks].Ocjene.Add(ocjena);
-            Console.WriteLine("Ocjena unesena.");
+            studenti[indeks] = new Student { Ime = ime, Prezime = prezime, Indeks = indeks };
+            Console.WriteLine("Student uspješno unesen.");
         }
         else
         {
-            Console.WriteLine("Neispravna ocjena.");
+            Console.WriteLine("Student sa tim indeksom već postoji ili su podaci neispravni.");
         }
     }
-    else
-    {
-        Console.WriteLine("Student nije pronađen.");
-    }
-}
 
-static void PrikaziSveStudente()
-{
-    if (studenti.Count == 0)
+    // Unos ocjene postojećem studentu
+    static void UnesiOcjenu()
     {
-        Console.WriteLine("Nema unesenih studenata.");
-        return;
-    }
+        Console.Write("Unesi indeks studenta: ");
+        string indeks = Console.ReadLine();
 
-    foreach (var s in studenti.Values)
-    {
-        Console.WriteLine($"[{s.Indeks}] {s.Ime} {s.Prezime} - Ocjene: {string.Join(", ", s.Ocjene)}");
-    }
-}
-
-static void PrikaziProsjeke()
-{
-    if (studenti.Count == 0)
-    {
-        Console.WriteLine("Nema unesenih studenata.");
-        return;
+        if (studenti.ContainsKey(indeks))
+        {
+            Console.Write("Unesi ocjenu (5-10): ");
+            if (int.TryParse(Console.ReadLine(), out int ocjena) && ocjena >= 5 && ocjena <= 10)
+            {
+                studenti[indeks].Ocjene.Add(ocjena);
+                Console.WriteLine("Ocjena unesena.");
+            }
+            else
+            {
+                Console.WriteLine("Neispravna ocjena.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Student nije pronađen.");
+        }
     }
 
-    foreach (var s in studenti.Values)
+    // Prikaz svih studenata i njihovih ocjena
+    static void PrikaziSveStudente()
     {
-        Console.WriteLine($"[{s.Indeks}] {s.Ime} {s.Prezime} - Prosjek: {s.Prosjek():0.00}");
+        if (studenti.Count == 0)
+        {
+            Console.WriteLine("Nema unesenih studenata.");
+            return;
+        }
+
+        foreach (var s in studenti.Values)
+        {
+            Console.WriteLine($"[{s.Indeks}] {s.Ime} {s.Prezime} - Ocjene: {string.Join(", ", s.Ocjene)}");
+        }
     }
-}
 
-static void ObrisiStudenta()
-{
-    Console.Write("Unesi indeks studenta za brisanje: ");
-    string indeks = Console.ReadLine();
-
-    if (studenti.Remove(indeks))
+    // Prikaz prosjeka ocjena za svakog studenta
+    static void PrikaziProsjeke()
     {
-        Console.WriteLine("Student obrisan.");
+        if (studenti.Count == 0)
+        {
+            Console.WriteLine("Nema unesenih studenata.");
+            return;
+        }
+
+        foreach (var s in studenti.Values)
+        {
+            Console.WriteLine($"[{s.Indeks}] {s.Ime} {s.Prezime} - Prosjek: {s.Prosjek():0.00}");
+        }
     }
-    else
+
+    // Brisanje studenta po indeksu
+    static void ObrisiStudenta()
     {
-        Console.WriteLine("Student nije pronađen.");
+        Console.Write("Unesi indeks studenta za brisanje: ");
+        string indeks = Console.ReadLine();
+
+        if (studenti.Remove(indeks))
+        {
+            Console.WriteLine("Student obrisan.");
+        }
+        else
+        {
+            Console.WriteLine("Student nije pronađen.");
+        }
     }
-}
 
-static void PretraziStudenta()
-{
-    Console.Write("Unesi indeks: ");
-    string indeks = Console.ReadLine();
-
-    if (studenti.TryGetValue(indeks, out var s))
+    // Pretraga studenta po indeksu
+    static void PretraziStudenta()
     {
-        Console.WriteLine($"[{s.Indeks}] {s.Ime} {s.Prezime} - Ocjene: {string.Join(", ", s.Ocjene)} - Prosjek: {s.Prosjek():0.00}");
+        Console.Write("Unesi indeks: ");
+        string indeks = Console.ReadLine();
+
+        if (studenti.TryGetValue(indeks, out var s))
+        {
+            Console.WriteLine($"[{s.Indeks}] {s.Ime} {s.Prezime} - Ocjene: {string.Join(", ", s.Ocjene)} - Prosjek: {s.Prosjek():0.00}");
+        }
+        else
+        {
+            Console.WriteLine("Student nije pronađen.");
+        }
     }
-    else
+
+    // Spremanje podataka u JSON fajl
+    static void SpremiStudenteUFajl()
     {
-        Console.WriteLine("Student nije pronađen.");
+
+        var json = JsonSerializer.Serialize(studenti, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(fajl, json);
+        Console.WriteLine($"Podaci su sačuvani u fajl:\n{fajl}");
     }
-}
 
-static void SpremiStudenteUFajl()
-{
-    string punaPutanja = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "studenti.json");
-    var json = JsonSerializer.Serialize(studenti, new JsonSerializerOptions { WriteIndented = true });
-    File.WriteAllText(punaPutanja, json);
-    Console.WriteLine($"Podaci su sačuvani u fajl:\n{punaPutanja}");
-}
-
-
-static void UcitajStudenteIzFajla()
-{
-    if (File.Exists(fajl))
+    // Učitavanje podataka iz JSON fajla
+    static void UcitajStudenteIzFajla()
     {
-        var json = File.ReadAllText(fajl);
-        studenti = JsonSerializer.Deserialize<Dictionary<string, Student>>(json) ?? new Dictionary<string, Student>();
+        if (File.Exists(fajl))
+        {
+            var json = File.ReadAllText(fajl);
+            studenti = JsonSerializer.Deserialize<Dictionary<string, Student>>(json) ?? new Dictionary<string, Student>();
+        }
     }
-}
 }
